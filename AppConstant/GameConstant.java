@@ -21,13 +21,17 @@ public class GameConstant {
 	public static final int TURN_TOM = -1;
 	public static final int TURN_HUM = 1;
 	public static final int GAME_STOP = 0;
+	public static final int GAME_PAUSE = 2;
 	public static final int HUM_STATUS = 2;
 	public static final int TOM_STATUS = 1;
 	public static final int EMPTY_STATUS = 0;
 	public static final int TOM_WIN = 1;
 	public static final int HUM_WIN = 2;
 	public static final int NUMBER_OF_TOM_WHEN_HUM_WIN = 1;
-	public static final int NORMAL = 0 ;
-	public static final int MEDIUM = 2 ;
-	public static final int HARD = 4 ;
+	public static final int NORMAL = 1 ;
+	public static final int MEDIUM = 3 ;
+	public static final int HARD = 5 ;
+	public static final int HUMAN_VS_HUMAN = 0 ;
+	public static final int HUMAN_CHOOSE_TOM = -1 ;
+	public static final int HUMAN_CHOOSE_HUM = 1 ;
 }

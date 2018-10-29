@@ -9,8 +9,8 @@ import Entity.*;
 public class GameBoard {
 	public static void clearGameBoard (Graphics g) {				
 		g.setColor(GameConstant.BACKGROUND_COLOR);
-		//g.fillRect(0, 0, width, GameConstant.FRAME_HEIGHT);
-		g.fillRect(0, 0, GameConstant.FRAME_WIDTH, GameConstant.FRAME_HEIGHT);
+		//g.fillRect(0, 0, width, GameConstant.FRAME_HEIGHT);//GameConstant.FRAME_WIDTH
+		g.fillRect(0, 0, 500 , GameConstant.FRAME_HEIGHT);
 	}
 	public static void paintGameBoard (Graphics g , List<Point> listPointOfGameBoard) {
 		g.setColor(GameConstant.GAME_BOARD_COLOR);
