@@ -8,6 +8,9 @@ import Common.common;
 import Entity.Point;
 
 public class AlphaBeta {
+	
+	private static final int MAX = 100000;
+	private static final int MIN = -100000;
 
 	public static boolean stop(List<Integer> listTom, List<Integer> listHum, int dept ,int level) {
 		if (dept == level)
@@ -21,9 +24,12 @@ public class AlphaBeta {
 
 	public static int MinVal(List<Point> listPointOfGameBoard, List<Integer> listTom, List<Integer> listHum, int alpha,
 			int beta, int dept , int level) {
-		int minVal = Integer.MIN_VALUE;
-		if (stop(listTom, listHum, dept,level) == true) {
-			minVal = Evaluation.eval(listPointOfGameBoard, listTom, listHum);
+		if (stop(listTom, listHum, dept,level) == true) {		
+			if (listTom.size() == 1)
+				return MAX;
+			if (listHum.size() == 0)
+				return MIN;
+			return Evaluation.eval(listPointOfGameBoard, listTom, listHum);
 		} else {
 			for (int i = 0; i < listTom.size(); i++) {
 				List<Integer> list = common.getListMoveable(listTom.get(i), listPointOfGameBoard);
@@ -40,16 +46,18 @@ public class AlphaBeta {
 					}
 				}
 			}
-			minVal = beta;
+			return beta;
 		}
-		return minVal;
 	}
 
 	public static int MaxVal(List<Point> listPointOfGameBoard, List<Integer> listTom, List<Integer> listHum, int alpha,
 			int beta, int dept , int level) {
-		int maxVal = Integer.MAX_VALUE;
-		if (stop(listTom, listHum, dept,level) == true) {
-			maxVal = Evaluation.eval(listPointOfGameBoard, listTom, listHum);
+		if (stop(listTom, listHum, dept,level) == true) {			
+			if (listTom.size() == 1)
+				return MAX;
+			if (listHum.size() == 0)
+				return MIN;
+			return Evaluation.eval(listPointOfGameBoard, listTom, listHum);
 		} else {
 			for (int i = 0; i < listHum.size(); i++) {
 				List<Integer> list = common.getListMoveable(listHum.get(i), listPointOfGameBoard);
@@ -76,9 +84,8 @@ public class AlphaBeta {
 					}
 				}
 			}
-			maxVal = alpha;
+			return alpha;
 		}
-		return maxVal;
 	}
 
 	public static Object[] Alpha_beta_Tom(List<Point> listPointOfGameBoard, List<Integer> listTom, List<Integer> listHum,int level) {
@@ -94,18 +101,23 @@ public class AlphaBeta {
 				ArrayList<Integer> cloneListTom = new ArrayList<>(listTom);
 				move(listTom.get(i), listMoveable.get(j), cloneListTom, listPointOfGameBoard, GameConstant.TOM_STATUS);
 				kill(cloneListTom, cloneListHum, listPointOfGameBoard);
-				List<Integer> re1 = cloneListHum;
+				
 				List<Integer> re0 = cloneListTom;
+				List<Integer> re1 = cloneListHum;
 				int re = MaxVal(listPointOfGameBoard, cloneListTom, cloneListHum, alpha, beta, 0,level);
 				update(listPointOfGameBoard, listTom, listHum);
+				if (re == MIN && cloneListHum.size() == 0) {
+					objects[0] = re0;
+					objects[1] = re1;					
+					return objects;
+				}
 				if (beta > re) {
 					beta = re;
 					objects[0] = re0;
 					objects[1] = re1;
 				}
 			}
-		}
-		
+		}	
 		return objects;
 	}
 	
@@ -118,18 +130,21 @@ public class AlphaBeta {
 		for (int i = 0; i < listHum.size(); i++) {
 			List<Integer> listMoveable = common.getListMoveable(listHum.get(i), listPointOfGameBoard);
 			List<Integer> listCatch = common.getListCatchable(listHum.get(i), listMoveable, listPointOfGameBoard);
+			
 			for (int j = 0; j < listMoveable.size(); j++) {
 				ArrayList<Integer> cloneListHum = new ArrayList<>(listHum);
 				move(listHum.get(i), listMoveable.get(j), cloneListHum, listPointOfGameBoard, GameConstant.HUM_STATUS);
+				kill(listTom, cloneListHum, listPointOfGameBoard);
 				List<Integer> re1 = cloneListHum;
 				int re = MinVal(listPointOfGameBoard, listTom, cloneListHum, alpha, beta, 0,level);
-				update(listPointOfGameBoard, listTom, listHum);
+				update(listPointOfGameBoard, listTom, listHum);				
 				if (alpha < re) {
 					alpha = re;
 					objects[0] = listTom;
-					objects[1] = re1;
+					objects[1] = re1;					
 				}
 			}
+			
 			for (int j = 0; j < listCatch.size(); j++) {
 				ArrayList<Integer> cloneListHum = new ArrayList<>(listHum);
 				ArrayList<Integer> cloneListTom = new ArrayList<>(listTom);
@@ -142,14 +157,18 @@ public class AlphaBeta {
 
 				int re = MinVal(listPointOfGameBoard, cloneListTom, cloneListHum, alpha, beta, 0,level);
 				update(listPointOfGameBoard, listTom, listHum);
-
+				if (re == MAX) {	
+					objects[0] = re0;
+					objects[1] = re1;
+					return objects;
+				}
 				if (alpha < re) {
 					alpha = re;
 					objects[0] = re0;
-					objects[1] = re1;
+					objects[1] = re1;				
 				}
 			}
-		}	
+		}
 		return objects;
 	}
 

@@ -9,7 +9,6 @@ import Entity.*;
 public class GameBoard {
 	public static void clearGameBoard (Graphics g) {				
 		g.setColor(GameConstant.BACKGROUND_COLOR);
-		//g.fillRect(0, 0, width, GameConstant.FRAME_HEIGHT);//GameConstant.FRAME_WIDTH
 		g.fillRect(0, 0, 500 , GameConstant.FRAME_HEIGHT);
 	}
 	public static void paintGameBoard (Graphics g , List<Point> listPointOfGameBoard) {
@@ -49,11 +48,6 @@ public class GameBoard {
 			Point point = listPointOfGameBoard.get(listMoveNext.get(i));
 			g.fillOval((point.getX() - w), (point.getY() - w) , GameConstant.MOVE_NEXT_WIDTH, GameConstant.MOVE_NEXT_WIDTH);
 		}	
-//		System.out.println();
-//		for (int i = 0 ;i< listMoveNext.size();i++) {
-//			System.out.print(listMoveNext.get(i) + " ");
-//		}
-
 	}
 	public static void paintListCatch (Graphics g , List<Integer> listCatch , List<Point> listPointOfGameBoard) {
 		g.setColor(GameConstant.HUM_COLOR);	

@@ -7,11 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import FileIO.*;
 import ai.*;
-
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
-import Abstract.AbstractChess;
 import AppConstant.GameConstant;
 import Common.*;
 import Entity.*;
@@ -27,17 +24,16 @@ public class GamePanel extends JPanel implements MouseListener {
 	private List<Integer> listTom;
 	private List<Integer> listMoveable;
 	private List<Integer> listCatch;
-	private List<AbstractChess> listUndo;
 	private int chessIsChecked = -1;
 	private int TURN_PLAYER = GameConstant.GAME_STOP;
 	private int PLAYER_WIN = 0;
 	private int isVsCom = 0;
 	private int level;
+	private boolean turnCom = false;
+	private int count = 0;
 
 	public GamePanel() {
 		restart();
-		listUndo = new ArrayList<AbstractChess>();
-		// TURN_PLAYER = GameConstant.TURN_TOM;
 		this.addMouseListener(this);
 	}
 
@@ -48,8 +44,6 @@ public class GamePanel extends JPanel implements MouseListener {
 		GameBoard.clearGameBoard(g);
 		GameBoard.paintGameBoard(g, listPointOfGameBoard);
 		GameBoard.paintChess(g, listTom, listHum, listPointOfGameBoard, chessIsChecked);
-		// g.setColor(Color.RED);
-		// g.fillOval(550, 100, 50, 50);
 		if (chessIsChecked == -1)
 			return;
 		GameBoard.paintListMoveNext(g, listMoveable, listPointOfGameBoard);
@@ -64,29 +58,23 @@ public class GamePanel extends JPanel implements MouseListener {
 		if (TURN_PLAYER == GameConstant.GAME_STOP) {
 			return;
 		}
-		// if (e.getX() > 550 && e.getX() < 600 && e.getY() > 100 && e.getY() <
-		// 150) {
-		// Undo() ;
-		// repaint();
-		// return ;
-		// }
 
 		if (isClickedOutSideTheGameBoard(e.getX(), e.getY())) {
-			System.out.println("Click outside the gameboard!");
+			
 			return;
 		}
 		switch (TURN_PLAYER) {
 		case GameConstant.TURN_HUM:
-			Move(e.getX(), e.getY(), listHum, listMoveable, GameConstant.HUM_WIDTH, GameConstant.HUM_STATUS);
+			int newPosition = Move(e.getX(), e.getY(), listHum, listMoveable, GameConstant.HUM_WIDTH, GameConstant.HUM_STATUS);
 			Kill(e.getX(), e.getY());
+			Count (newPosition) ;
+			if (count == 5) {
+				PLAYER_WIN = GameConstant.TOM_WIN;
+				showMessage ("Hùm thua do 5 nước liên tiếp không thoát được hình thoi\nBạn có muốn chơi lại không ?") ;
+			}
+			Kill();
 			if (checkHumWin()) {
-				repaint();
-				int option = JOptionPane.showConfirmDialog(null, "Hùm thắng\nBạn có muốn chơi lại không ?",
-						"Information", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-				if (JOptionPane.YES_OPTION == option) {
-					restart();
-				} else
-					TURN_PLAYER = GameConstant.GAME_STOP;
+				showMessage ("Hùm thắng\nBạn có muốn chơi lại không ?") ;				
 			}
 			if (isVsCom == GameConstant.HUMAN_VS_HUMAN) {
 				break;
@@ -94,33 +82,19 @@ public class GamePanel extends JPanel implements MouseListener {
 			if (TURN_PLAYER == GameConstant.TURN_TOM) {
 				Object obj[] = AlphaBeta.Alpha_beta_Tom(listPointOfGameBoard, listTom, listHum, level);
 				listTom = (ArrayList<Integer>) obj[0];
-				listHum = (ArrayList<Integer>) obj[1];
+				listHum = (ArrayList<Integer>) obj[1];				
 				AlphaBeta.update(listPointOfGameBoard, listTom, listHum);
 				TURN_PLAYER = 0 - TURN_PLAYER;
-
 				if (checkTomWin()) {
-					repaint();
-					int option = JOptionPane.showConfirmDialog(null, "Máy thắng\nBạn có muốn chơi lại không ?",
-							"Information", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-					if (JOptionPane.YES_OPTION == option) {
-						restart();
-					} else
-						TURN_PLAYER = GameConstant.GAME_STOP;
+					showMessage ("Máy thắng\nBạn có muốn chơi lại không ?") ;					
 				}
-
 			}
 			break;
 		case GameConstant.TURN_TOM:
 			Move(e.getX(), e.getY(), listTom, listMoveable, GameConstant.TOM_WIDTH, GameConstant.TOM_STATUS);
 			Kill();
 			if (checkTomWin()) {
-				repaint();
-				int option = JOptionPane.showConfirmDialog(null, "Tôm thắng\nBạn có muốn chơi lại không ?",
-						"Information", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-				if (JOptionPane.YES_OPTION == option) {
-					restart();
-				} else
-					TURN_PLAYER = GameConstant.GAME_STOP;
+				showMessage("Tôm thắng\nBạn có muốn chơi lại không ?");			
 			}
 			if (isVsCom == GameConstant.HUMAN_VS_HUMAN) {
 				break;
@@ -131,21 +105,13 @@ public class GamePanel extends JPanel implements MouseListener {
 				listHum = (ArrayList<Integer>) obj[1];
 				AlphaBeta.update(listPointOfGameBoard, listTom, listHum);
 				TURN_PLAYER = 0 - TURN_PLAYER;
-
 				if (checkHumWin()) {
-					repaint();
-					int option = JOptionPane.showConfirmDialog(null, "Máy thắng\nBạn có muốn chơi lại không ?",
-							"Information", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-					if (JOptionPane.YES_OPTION == option) {
-						restart();
-					} else
-						TURN_PLAYER = GameConstant.GAME_STOP;
+					showMessage ("Máy thắng\nBạn có muốn chơi lại không ?") ;					
 				}
 			}
 			break;
 		}
 		repaint();
-
 	}
 
 	@SuppressWarnings("unchecked")
@@ -160,6 +126,8 @@ public class GamePanel extends JPanel implements MouseListener {
 		listHum = (ArrayList<Integer>) data.get(2);
 		listMoveable = new ArrayList<Integer>();
 		listCatch = new ArrayList<Integer>();
+		count = 0 ;
+		PLAYER_WIN = 0;
 		if (isVsCom == GameConstant.HUMAN_CHOOSE_HUM) {
 			TURN_PLAYER = GameConstant.TURN_HUM;
 		} else {
@@ -168,88 +136,22 @@ public class GamePanel extends JPanel implements MouseListener {
 		chessIsChecked = -1;
 	}
 
-	public void Undo() {
-		if (listUndo.size() == 0) {
-			return;
-		}
-		switch (TURN_PLAYER) {
-		case GameConstant.TURN_HUM:
-			Undo(GameConstant.TOM_STATUS, listTom);
-			TURN_PLAYER = GameConstant.TURN_TOM;
-			break;
-		case GameConstant.TURN_TOM:
-			Hum hum = (Hum) Undo(GameConstant.HUM_STATUS, listHum);
-			if (hum.getpCatchInListTom() != -1) {
-				listTom.add(-1);
-				for (int i = listTom.size() - 1; i > hum.getpCatchInListTom(); i--) {
-					listTom.set(i, listTom.get(i - 1));
-				}
-				listTom.set(hum.getpCatchInListTom(), hum.getpAfter());
-				listPointOfGameBoard.get(hum.getpAfter()).setStatus(GameConstant.TOM_STATUS);
-			}
-			TURN_PLAYER = GameConstant.TURN_HUM;
-			break;
-		}
-
-	}
-
-	public AbstractChess Undo(int status, List<Integer> list) {
-		AbstractChess chess = listUndo.get(listUndo.size() - 1);
-		listUndo.remove(listUndo.size() - 1);
-
-		for (int i = list.size() - 1; i > chess.getpInOldList(); i--) {
-			list.set(i, list.get(i - 1));
-		}
-		list.set(chess.getpInOldList(), chess.getpBefore());
-
-		for (int i = 0; i < listPointOfGameBoard.size(); i++) {
-			if (i == chess.getpAfter()) {
-				listPointOfGameBoard.get(i).setStatus(GameConstant.EMPTY_STATUS);
-				listPointOfGameBoard.get(chess.getpBefore()).setStatus(status);
-				break;
-			}
-		}
-		return chess;
-	}
-
-	public void Move(int oldPosition, int newPosition, List<Integer> listChess, int status) {
-		for (int i = 0; i < listChess.size(); i++) {
-			if (listChess.get(i) == oldPosition) {
-				listChess.remove(i);
-				listChess.add(newPosition);
-				listPointOfGameBoard.get(oldPosition).setStatus(GameConstant.EMPTY_STATUS);
-				listPointOfGameBoard.get(newPosition).setStatus(status);
-
-				if (TURN_PLAYER == GameConstant.TURN_TOM) {
-					Tom tom = new Tom(oldPosition, newPosition, i);
-					listUndo.add(tom);
-				} else if (TURN_PLAYER == GameConstant.TURN_HUM) {
-					Hum hum = new Hum(oldPosition, newPosition, i, -1);
-					listUndo.add(hum);
-				}
-				chessIsChecked = -1;
-				TURN_PLAYER = 0 - TURN_PLAYER;
-				break;
-			}
-		}
-	}
-
-	public void Move(int x, int y, List<Integer> listChess, List<Integer> lstMoveable, int width, int status) {
+	public int Move(int x, int y, List<Integer> listChess, List<Integer> lstMoveable, int width, int status) {
 		int position = findChessIsChecked(x, y, listChess, width);
 		if (position == -1 && chessIsChecked == -1)
-			return;
+			return -1;
 		if (chessIsChecked == -1) {
 			replace(position);
-			return;
+			return -1;
 		} else {
 			if (position == chessIsChecked)
-				return;
+				return -1;
 			if (isSame(position, listChess)) {
 				replace(position);
-				return;
+				return -1;
 			}
 		}
-		whenMoved(x, y, listChess, lstMoveable, status);
+		return whenMoved(x, y, listChess, lstMoveable, status);
 	}
 
 	public void replace(int position) {
@@ -262,7 +164,18 @@ public class GamePanel extends JPanel implements MouseListener {
 		if (nextPostion == -1) {
 			return nextPostion;
 		}
-		Move(chessIsChecked, nextPostion, listChess, status);
+		for (int i = 0; i < listChess.size(); i++) {
+			if (listChess.get(i) == chessIsChecked) {
+				listChess.remove(i);
+				listChess.add(nextPostion);
+				listPointOfGameBoard.get(chessIsChecked).setStatus(GameConstant.EMPTY_STATUS);
+				listPointOfGameBoard.get(nextPostion).setStatus(status);
+				chessIsChecked = -1;
+				TURN_PLAYER = 0 - TURN_PLAYER;
+				turnCom = !turnCom;
+				break;
+			}
+		}
 		return nextPostion;
 	}
 
@@ -277,6 +190,7 @@ public class GamePanel extends JPanel implements MouseListener {
 		return -1;
 	}
 
+	// catch hum
 	public void Kill() {
 		for (int i = 0; i < listHum.size(); i++) {
 			if (common.getListMoveable(listHum.get(i), listPointOfGameBoard).size() == 0) {
@@ -286,14 +200,11 @@ public class GamePanel extends JPanel implements MouseListener {
 		}
 	}
 
+	// catch tom
 	public void Kill(int postionCatched) {
 		for (int k = 0; k < listTom.size(); k++) {
 			if (listTom.get(k) == postionCatched) {
 				listTom.remove(k);
-				// Hum hum = new Hum(oldPosition, postionCatched, pInOldListHum
-				// , k);
-				// listUndo.remove(listUndo.size() - 1);
-				// listUndo.add(hum);
 				break;
 			}
 		}
@@ -303,24 +214,24 @@ public class GamePanel extends JPanel implements MouseListener {
 		if (chessIsChecked == -1)
 			return;
 		listCatch = common.getListCatchable(chessIsChecked, listMoveable, listPointOfGameBoard);
-		int chessChecked = chessIsChecked;
-		int pInOldListHum = -1;
-		for (int i = 0; i < listHum.size(); i++) {
-			if (listHum.get(i) == chessChecked) {
-				pInOldListHum = i;
-				break;
-			}
-		}
 		int postionCatched = whenMoved(x, y, listHum, listCatch, GameConstant.HUM_STATUS);
 		if (postionCatched == -1)
 			return;
 		for (int k = 0; k < listTom.size(); k++) {
 			if (listTom.get(k) == postionCatched) {
 				listTom.remove(k);
-				Hum hum = new Hum(chessChecked, postionCatched, pInOldListHum, k);
-				listUndo.remove(listUndo.size() - 1);
-				listUndo.add(hum);
 				break;
+			}
+		}
+	}
+
+	public void Count(int newPosition) {
+		if (listHum.size() == 1) {
+			if (newPosition != -1) {
+				if (newPosition <= 28 && newPosition > 24) {
+					count++;
+				}
+				else count = 0 ;
 			}
 		}
 	}
@@ -385,6 +296,15 @@ public class GamePanel extends JPanel implements MouseListener {
 		return false;
 	}
 
+	public void showMessage (String messeage) {
+		repaint();
+		int option = JOptionPane.showConfirmDialog(null, messeage,
+				"Thông Báo", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+		if (JOptionPane.YES_OPTION == option) {
+			restart();
+		} else
+			TURN_PLAYER = GameConstant.GAME_STOP;
+	}
 	@Override
 	public void mouseEntered(MouseEvent e) {
 		// TODO Auto-generated method stub
